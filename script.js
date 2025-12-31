@@ -77,33 +77,110 @@ document.querySelectorAll('.timeline-item, .project-card, .skill-category, .achi
     observer.observe(el);
 });
 
-// Contact Form Handling
+// Contact Form Handling with EmailJS
+// Initialize EmailJS with your public key
+// You need to sign up at https://www.emailjs.com/ and get your credentials
+(function () {
+    emailjs.init("TO8g3FSHrs8yw0Nr9");
+})();
+
 const contactForm = document.getElementById('contactForm');
 
 contactForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    
-    const formData = {
-        name: document.getElementById('name').value,
-        email: document.getElementById('email').value,
+
+    const submitBtn = contactForm.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.textContent;
+
+    // Show loading state
+    submitBtn.textContent = 'Envoi en cours...';
+    submitBtn.disabled = true;
+
+    const templateParams = {
+        from_name: document.getElementById('name').value,
+        from_email: document.getElementById('email').value,
         subject: document.getElementById('subject').value,
-        message: document.getElementById('message').value
+        message: document.getElementById('message').value,
+        to_email: 'medou.med.bouk@gmail.com'
     };
 
-    // Create mailto link
-    const mailtoLink = `mailto:medou.med.bouk@gmail.com?subject=${encodeURIComponent(formData.subject)}&body=${encodeURIComponent(
-        `Nom: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`
-    )}`;
+    // Send email using EmailJS
+    // Replace 'YOUR_SERVICE_ID' and 'YOUR_TEMPLATE_ID' with your EmailJS credentials
+    emailjs.send('service_d1n1yrd', 'template_ptig5mm', templateParams)
+        .then(function (response) {
+            console.log('Email sent successfully!', response.status, response.text);
 
-    // Open email client
-    window.location.href = mailtoLink;
+            // Show success message
+            showNotification('Message envoyé avec succès ! Je vous répondrai bientôt.', 'success');
 
-    // Show success message
-    alert('Votre client email va s\'ouvrir. Merci de votre message !');
-    
-    // Reset form
-    contactForm.reset();
+            // Reset form
+            contactForm.reset();
+        }, function (error) {
+            console.error('Failed to send email:', error);
+
+            // Show error message
+            showNotification('Erreur lors de l\'envoi. Veuillez réessayer ou me contacter directement par email.', 'error');
+        })
+        .finally(function () {
+            // Reset button state
+            submitBtn.textContent = originalBtnText;
+            submitBtn.disabled = false;
+        });
 });
+
+// Notification function for form feedback
+function showNotification(message, type) {
+    // Remove existing notification if any
+    const existingNotification = document.querySelector('.form-notification');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+
+    const notification = document.createElement('div');
+    notification.className = `form-notification ${type}`;
+    notification.textContent = message;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 25px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+        max-width: 400px;
+    `;
+
+    if (type === 'success') {
+        notification.style.background = 'linear-gradient(135deg, #00b894, #00cec9)';
+    } else {
+        notification.style.background = 'linear-gradient(135deg, #e74c3c, #c0392b)';
+    }
+
+    document.body.appendChild(notification);
+
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+    }, 5000);
+}
+
+// Add animation keyframes for notifications
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
 
 // Typing effect for hero subtitle (optional enhancement)
 const subtitleText = "Élève Ingénieur en Informatique | Développeur Full Stack | Passionné d'IA";
@@ -135,7 +212,7 @@ window.addEventListener('scroll', () => {
 
 // Skill badge hover effect (add ripple)
 document.querySelectorAll('.skill-badge').forEach(badge => {
-    badge.addEventListener('click', function(e) {
+    badge.addEventListener('click', function (e) {
         const ripple = document.createElement('span');
         ripple.classList.add('ripple');
         this.appendChild(ripple);
@@ -208,16 +285,16 @@ document.querySelectorAll('.project-card').forEach(card => {
         const rect = card.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-        
+
         const centerX = rect.width / 2;
         const centerY = rect.height / 2;
-        
+
         const rotateX = (y - centerY) / 10;
         const rotateY = (centerX - x) / 10;
-        
+
         card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-10px)`;
     });
-    
+
     card.addEventListener('mouseleave', () => {
         card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateY(0)';
     });
